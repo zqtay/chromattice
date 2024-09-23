@@ -3,10 +3,7 @@ import { useEffect, useState } from "react";
 import { createHexGradient, generateRandomHexColor, hexToRgb } from "@/lib/common/color";
 import ColorTile from "@/components/puzzle/tile";
 import { TouchBackend } from 'react-dnd-touch-backend';
-import { HTML5Backend } from 'react-dnd-html5-backend';
 import { DndProvider } from 'react-dnd';
-import ColorGrid from "@/components/puzzle/grid";
-import { isTouchScreenDevice } from "@/lib/client/utils";
 
 
 const Home = () => {
@@ -44,19 +41,15 @@ const Home = () => {
           ))
         }
       </div>
-      <ColorGrid />
     </div>
   );
 };
 
 export default () => {
-  const isTouchScreen = isTouchScreenDevice();
   return (
     <DndProvider
-      // backend={isTouchScreen ? TouchBackend : HTML5Backend}
-      // options={isTouchScreen ? { enableMouseEvents: true } : {}}
       backend={TouchBackend}
-      options={{ enableMouseEvents: true, preview: true }}
+      options={{ enableMouseEvents: true }}
     >
       <Home />
     </DndProvider>
