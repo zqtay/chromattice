@@ -1,11 +1,18 @@
 "use client";
 import { useEffect, useState } from "react";
 import { createHexGradient, generateRandomHexColor, hexToRgb } from "@/lib/common/color";
+import ColorTile from "@/components/puzzle/tile";
+import { TouchBackend } from 'react-dnd-touch-backend';
+import { HTML5Backend } from 'react-dnd-html5-backend';
+import { DndProvider } from 'react-dnd';
+import ColorGrid from "@/components/puzzle/grid";
+import { isTouchScreenDevice } from "@/lib/client/utils";
 
-export default function Home() {
-  const [start, setStart] = useState("");
-  const [end, setEnd] = useState("");
-  const [length, setLength] = useState(0);
+
+const Home = () => {
+  const [start, setStart] = useState("ffffff");
+  const [end, setEnd] = useState("ffffff");
+  const [length, setLength] = useState(2);
 
   const handleGenerate = () => {
     setStart(generateRandomHexColor());
@@ -20,10 +27,10 @@ export default function Home() {
   return (
     <div>
       <div className="flex">
-        <div className="w-12 h-12" style={{ backgroundColor: start, color: getTextColorContrast(start) }}>
+        <div className="w-12 h-12" style={{ backgroundColor: start }}>
           Start
         </div>
-        <div className="w-12 h-12" style={{ backgroundColor: end, color: getTextColorContrast(end) }}>
+        <div className="w-12 h-12" style={{ backgroundColor: end }}>
           End
         </div>
         <button onClick={handleGenerate}>
@@ -33,18 +40,25 @@ export default function Home() {
       <div className="flex text-xs">
         {
           createHexGradient(start, end, length).map((color, index) => (
-            <div key={index} className="w-12 h-12" style={{ backgroundColor: color, color: getTextColorContrast(color) }}>
-              {color.slice(1)}
-            </div>
+            <ColorTile key={index} color={color} />
           ))
         }
       </div>
+      <ColorGrid />
     </div>
   );
-}
+};
 
-const getTextColorContrast = (hex: string) => {
-  const { red, green, blue } = hexToRgb(hex);
-  const brightness = (red + green + blue) / 3;
-  return brightness >= 128 ? "black" : "white";
+export default () => {
+  const isTouchScreen = isTouchScreenDevice();
+  return (
+    <DndProvider
+      // backend={isTouchScreen ? TouchBackend : HTML5Backend}
+      // options={isTouchScreen ? { enableMouseEvents: true } : {}}
+      backend={TouchBackend}
+      options={{ enableMouseEvents: true, preview: true }}
+    >
+      <Home />
+    </DndProvider>
+  );
 };
