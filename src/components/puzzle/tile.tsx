@@ -2,6 +2,7 @@
 import { getMouseTouchPosition } from "@/lib/client/utils";
 import { hexToRgb } from "@/lib/common/color";
 import { FC, use, useCallback, useEffect, useRef } from "react";
+import { highlightOverlappingBox, removeAllBorderHighlight as removeAllHighlight } from "./grid";
 
 type TilePosition = {
   // Position of the tile when drag starts
@@ -28,17 +29,13 @@ const ColorTile: FC<{ color: string; }> = ({ color }) => {
     posRef.current.y = ref.current.offsetTop;
 
     // Register event handlers
-    document.onmouseup = document.ontouchend = closeDragElement;
+    document.onmouseup = document.ontouchend = elementRelease;
     document.onmousemove = document.ontouchmove = elementDrag;
   };
 
   const elementDrag = (e: MouseEvent | TouchEvent) => {
     if (!ref.current) return;
     const { x, y } = getMouseTouchPosition(e);
-
-    // console.log("client", x, y);
-    // console.log("postRef", posRef.current);
-    // console.log("off", ref.current.offsetLeft, ref.current.offsetTop);
 
     // Calculate element new position, accounting for cursor offset
     posRef.current.x = x - posRef.current.cursorX;
@@ -47,6 +44,36 @@ const ColorTile: FC<{ color: string; }> = ({ color }) => {
     // Set new position in style
     ref.current.style.left = (posRef.current.x) + "px";
     ref.current.style.top = (posRef.current.y) + "px";
+
+    // Highlight the tile when dragged
+    const centerX = posRef.current.x + 24;
+    const centerY = posRef.current.y + 24;
+
+    // Set all box border to default
+    removeAllHighlight();
+    // Check and set highlight if it is overlapping a grid box
+    highlightOverlappingBox(centerX, centerY);
+  };
+
+  const elementRelease =(e: MouseEvent | TouchEvent) => {
+    if (!ref.current) return;
+    // Calculate element new center position
+    const { x, y } = getMouseTouchPosition(e);
+    const centerX = x - posRef.current.cursorX + 24;
+    const centerY = y - posRef.current.cursorY + 24;
+
+    // Get overlapping box
+    const box = document.elementsFromPoint(centerX, centerY).find((el) => el.id.startsWith("box-"));
+    if (box) {
+      const { x, y } = box.getBoundingClientRect();
+      // Snap the element to the box
+      ref.current.style.left = x + "px";
+      ref.current.style.top = y + "px";
+    }
+
+    // stop moving when mouse button is released:
+    document.onmouseup = null;
+    document.onmousemove = null;
   };
 
   if (ref.current) {
@@ -60,12 +87,6 @@ const ColorTile: FC<{ color: string; }> = ({ color }) => {
   >
     {color.slice(1)}
   </div>;
-};
-
-const closeDragElement = () => {
-  /* stop moving when mouse button is released:*/
-  document.onmouseup = null;
-  document.onmousemove = null;
 };
 
 const getTextColorContrast = (hex: string) => {

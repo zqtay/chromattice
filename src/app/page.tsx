@@ -4,6 +4,7 @@ import { createHexGradient, generateRandomHexColor, hexToRgb } from "@/lib/commo
 import ColorTile from "@/components/puzzle/tile";
 import { TouchBackend } from 'react-dnd-touch-backend';
 import { DndProvider } from 'react-dnd';
+import ColorGrid from "@/components/puzzle/grid";
 
 
 const Home = () => {
@@ -41,17 +42,13 @@ const Home = () => {
           ))
         }
       </div>
+      <ColorGrid width={5} height={5} />
     </div>
   );
 };
 
 export default () => {
   return (
-    <DndProvider
-      backend={TouchBackend}
-      options={{ enableMouseEvents: true }}
-    >
-      <Home />
-    </DndProvider>
+    <Home />
   );
 };
