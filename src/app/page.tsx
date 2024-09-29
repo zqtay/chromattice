@@ -33,7 +33,7 @@ const Home = () => {
           Generate
         </button>
       </div>
-      <section id="palette" className="flex">
+      <section id="palette" className="flex flex-wrap gap-2 items-center justify-center">
         {
           createHexGradient(start, end, length).map((color, index) => (
             <ColorTile key={index} color={color} />

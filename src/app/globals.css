@@ -25,3 +25,21 @@ body {
     text-wrap: balance;
   }
 }
+
+.box {
+  @apply w-16 h-16 rounded-md;
+  @apply outline outline-1 outline-gray-200;
+
+  &.highlight {
+    @apply outline-blue-500;
+  }
+
+  &.disabled {
+    @apply outline-none;
+  }
+}
+
+.tile {
+  @apply w-16 h-16 p-1 text-xs relative rounded-md;
+  @apply cursor-grab active:cursor-grabbing select-none;
+}

@@ -1,12 +1,16 @@
 "use client";
 import { getMouseTouchPosition } from "@/lib/client/utils";
 import { hexToRgb } from "@/lib/common/color";
-import { FC, use, useCallback, useEffect, useRef, useState } from "react";
+import { FC, useEffect, useRef, useState } from "react";
 import { highlightOverlappingBox, removeAllBorderHighlight as removeAllHighlight } from "./grid";
+import {
+  HiLockClosed
+} from "react-icons/hi"
 
 type ColorTileProps = {
   id?: string;
   color: string;
+  locked?: boolean;
 };
 
 type TilePosition = {
@@ -18,7 +22,7 @@ type TilePosition = {
   cursorY: number;
 };
 
-const ColorTile: FC<ColorTileProps> = ({ id, color }) => {
+const ColorTile: FC<ColorTileProps> = ({ id, color, locked}) => {
   const [tile, setTile] = useState<HTMLDivElement | null>(null);
   const posRef = useRef<TilePosition>({ cursorX: 0, cursorY: 0, x: 0, y: 0 });
 
@@ -56,8 +60,8 @@ const ColorTile: FC<ColorTileProps> = ({ id, color }) => {
     tile.style.top = (posRef.current.y) + "px";
 
     // Get the center of the tile, accounting for cursor offset and scroll offset
-    const centerX = posRef.current.x + 24 - window.scrollX;
-    const centerY = posRef.current.y + 24 - window.scrollY;
+    const centerX = posRef.current.x + 32 - window.scrollX;
+    const centerY = posRef.current.y + 32 - window.scrollY;
 
     // Set all box border to default
     removeAllHighlight();
@@ -70,8 +74,8 @@ const ColorTile: FC<ColorTileProps> = ({ id, color }) => {
     // Calculate element new center position
     const { x, y } = getMouseTouchPosition(e);
     // Get the center of the tile, accounting for cursor offset and scroll offset
-    const centerX = x - posRef.current.cursorX + 24 - window.scrollX;
-    const centerY = y - posRef.current.cursorY + 24 - window.scrollY;
+    const centerX = x - posRef.current.cursorX + 32 - window.scrollX;
+    const centerY = y - posRef.current.cursorY + 32 - window.scrollY;
 
     // Get overlapping box
     const box = document.elementsFromPoint(centerX, centerY).find((el) => el.id.startsWith("box-"));
@@ -91,18 +95,19 @@ const ColorTile: FC<ColorTileProps> = ({ id, color }) => {
   };
 
   useEffect(() => {
-    if (tile) {
+    if (tile && !locked) {
       tile.onmousedown = tile.ontouchstart = dragMouseDown;
     }
-  }, [tile]);
+  }, [tile, locked]);
 
   return <div
     id={id}
     ref={setTile}
-    className="w-12 h-12 cursor-grab active:cursor-grabbing select-none text-xs"
+    className="tile"
     style={{ backgroundColor: color, color: getTextColorContrast(color) }}
   >
     {color.slice(1)}
+    {locked && <HiLockClosed className="absolute right-1 bottom-1 w-4 h-4" />}
   </div>;
 };
 
