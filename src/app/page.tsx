@@ -1,9 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
-import { createHexGradient, generateRandomHexColor, hexToRgb } from "@/lib/common/color";
+import { createHexGradient, generateRandomHexColor } from "@/lib/common/color";
 import ColorTile from "@/components/puzzle/tile";
-import { TouchBackend } from 'react-dnd-touch-backend';
-import { DndProvider } from 'react-dnd';
 import ColorGrid from "@/components/puzzle/grid";
 
 
@@ -35,14 +33,17 @@ const Home = () => {
           Generate
         </button>
       </div>
-      <div className="flex text-xs">
+      <section id="palette" className="flex">
         {
           createHexGradient(start, end, length).map((color, index) => (
             <ColorTile key={index} color={color} />
           ))
         }
-      </div>
-      <ColorGrid width={5} height={5} />
+      </section>
+      <section id="grid" className="w-full h-screen flex items-center justify-center">
+        <ColorGrid width={5} height={5} />
+      </section>
+
     </div>
   );
 };

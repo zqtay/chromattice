@@ -1,8 +1,13 @@
 "use client";
 import { getMouseTouchPosition } from "@/lib/client/utils";
 import { hexToRgb } from "@/lib/common/color";
-import { FC, use, useCallback, useEffect, useRef } from "react";
+import { FC, use, useCallback, useEffect, useRef, useState } from "react";
 import { highlightOverlappingBox, removeAllBorderHighlight as removeAllHighlight } from "./grid";
+
+type ColorTileProps = {
+  id?: string;
+  color: string;
+};
 
 type TilePosition = {
   // Position of the tile when drag starts
@@ -13,20 +18,25 @@ type TilePosition = {
   cursorY: number;
 };
 
-const ColorTile: FC<{ color: string; }> = ({ color }) => {
-  const ref = useRef<HTMLDivElement>(null);
+const ColorTile: FC<ColorTileProps> = ({ id, color }) => {
+  const [tile, setTile] = useState<HTMLDivElement | null>(null);
   const posRef = useRef<TilePosition>({ cursorX: 0, cursorY: 0, x: 0, y: 0 });
 
   const dragMouseDown = (e: MouseEvent | TouchEvent) => {
-    if (!ref.current) return;
+    if (!tile) return;
+
+    // Set the tile to absolute position
+    tile.style.left = tile.offsetLeft + "px";
+    tile.style.top = tile.offsetTop + "px";
+    tile.classList.add("absolute");
 
     const { x, y } = getMouseTouchPosition(e);
     // Get the mouse cursor offset within element
-    posRef.current.cursorX = x - ref.current.offsetLeft;
-    posRef.current.cursorY = y - ref.current.offsetTop;
-    // Get the current tile position
-    posRef.current.x = ref.current.offsetLeft;
-    posRef.current.y = ref.current.offsetTop;
+    posRef.current.cursorX = x - tile.offsetLeft;
+    posRef.current.cursorY = y - tile.offsetTop;
+    // Get the tile position
+    posRef.current.x = tile.offsetLeft;
+    posRef.current.y = tile.offsetTop;
 
     // Register event handlers
     document.onmouseup = document.ontouchend = elementRelease;
@@ -34,7 +44,7 @@ const ColorTile: FC<{ color: string; }> = ({ color }) => {
   };
 
   const elementDrag = (e: MouseEvent | TouchEvent) => {
-    if (!ref.current) return;
+    if (!tile) return;
     const { x, y } = getMouseTouchPosition(e);
 
     // Calculate element new position, accounting for cursor offset
@@ -42,12 +52,12 @@ const ColorTile: FC<{ color: string; }> = ({ color }) => {
     posRef.current.y = y - posRef.current.cursorY;
 
     // Set new position in style
-    ref.current.style.left = (posRef.current.x) + "px";
-    ref.current.style.top = (posRef.current.y) + "px";
+    tile.style.left = (posRef.current.x) + "px";
+    tile.style.top = (posRef.current.y) + "px";
 
-    // Highlight the tile when dragged
-    const centerX = posRef.current.x + 24;
-    const centerY = posRef.current.y + 24;
+    // Get the center of the tile, accounting for cursor offset and scroll offset
+    const centerX = posRef.current.x + 24 - window.scrollX;
+    const centerY = posRef.current.y + 24 - window.scrollY;
 
     // Set all box border to default
     removeAllHighlight();
@@ -56,33 +66,40 @@ const ColorTile: FC<{ color: string; }> = ({ color }) => {
   };
 
   const elementRelease =(e: MouseEvent | TouchEvent) => {
-    if (!ref.current) return;
+    if (!tile) return;
     // Calculate element new center position
     const { x, y } = getMouseTouchPosition(e);
-    const centerX = x - posRef.current.cursorX + 24;
-    const centerY = y - posRef.current.cursorY + 24;
+    // Get the center of the tile, accounting for cursor offset and scroll offset
+    const centerX = x - posRef.current.cursorX + 24 - window.scrollX;
+    const centerY = y - posRef.current.cursorY + 24 - window.scrollY;
 
     // Get overlapping box
     const box = document.elementsFromPoint(centerX, centerY).find((el) => el.id.startsWith("box-"));
     if (box) {
-      const { x, y } = box.getBoundingClientRect();
-      // Snap the element to the box
-      ref.current.style.left = x + "px";
-      ref.current.style.top = y + "px";
+      box.appendChild(tile);
     }
 
-    // stop moving when mouse button is released:
+    // Reset position and remove highlight
+    tile.classList.remove("absolute");
+    tile.style.removeProperty("left");
+    tile.style.removeProperty("top");
+    removeAllHighlight();
+
+    // Stop moving when mouse button is released
     document.onmouseup = null;
     document.onmousemove = null;
   };
 
-  if (ref.current) {
-    ref.current.onmousedown = ref.current.ontouchstart = dragMouseDown;
-  }
+  useEffect(() => {
+    if (tile) {
+      tile.onmousedown = tile.ontouchstart = dragMouseDown;
+    }
+  }, [tile]);
 
   return <div
-    ref={ref}
-    className="w-12 h-12 cursor-grab active:cursor-grabbing absolute select-none"
+    id={id}
+    ref={setTile}
+    className="w-12 h-12 cursor-grab active:cursor-grabbing select-none text-xs"
     style={{ backgroundColor: color, color: getTextColorContrast(color) }}
   >
     {color.slice(1)}
